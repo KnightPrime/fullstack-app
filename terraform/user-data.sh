@@ -14,7 +14,7 @@ npm install -g pm2
 
 # Clone or place your application repository (example cloning a public repo)
 cd /var/www
-git clone https://github.com app
+git clone https://github.com/KnightPrime/fullstack-app app
 cd app/backend
 npm install
 pm2 start server.js --name "backend-api"
