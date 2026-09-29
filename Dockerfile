@@ -1,11 +1,8 @@
 # --- Stage 1: Build the React Client ---
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
-# Copy only package files first to leverage Docker layer caching
 COPY frontend/package*.json ./frontend/
-# FIXED: Changed from 'npm ci' to 'npm install'
 RUN cd frontend && npm install
-# Copy the rest of the frontend source code
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
 
@@ -16,9 +13,11 @@ WORKDIR /app
 # Install native NGINX package dependencies inside alpine
 RUN apk add --no-cache nginx
 
+# FIXED: Ensure NGINX system directories exist for runtime workers
+RUN mkdir -p /run/nginx /var/log/nginx
+
 # Configure and deploy background services
 COPY backend/package*.json ./backend/
-# FIXED: Changed from 'npm ci' to 'npm install'
 RUN cd backend && npm install --only=production
 COPY backend/ ./backend/
 
@@ -28,5 +27,5 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 
 EXPOSE 80
 
-# Execute backend API asynchronously alongside the active NGINX process manager
-CMD ["sh", "-c", "node backend/server.js & nginx -g 'daemon off;'"]
+# FIXED: Explicitly use absolute paths for the execution engine to avoid startup crashes
+CMD ["sh", "-c", "node /app/backend/server.js & nginx -g 'daemon off;'"]
